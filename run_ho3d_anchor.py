@@ -60,9 +60,10 @@ if __name__=='__main__':
 
         color = cv2.cvtColor(cv2.imread(os.path.join(save_path, 'color.png')), cv2.COLOR_BGR2RGB)
         if args.mono_depth:
-            from mono_depth import estimate_metric_depth
+            from mono_depth import estimate_metric_depth, unload_metric_depth_models
             print(f"Estimating metric depth from RGB only (encoder={args.mono_depth_encoder}, dataset={args.mono_depth_dataset})...")
             depth = estimate_metric_depth(color, ckpt_path=args.mono_depth_ckpt, encoder=args.mono_depth_encoder, dataset=args.mono_depth_dataset)
+            unload_metric_depth_models()  # free VRAM before SAM2/diffusion/InstantMesh run
         else:
             depth = cv2.imread(os.path.join(save_path, 'depth.png'), cv2.IMREAD_ANYDEPTH).astype(np.float32) / 1000.0
         mask = cv2.cvtColor(cv2.imread(os.path.join(save_path, 'mask.png')),cv2.COLOR_BGR2RGB)[...,0].astype(np.bool_)

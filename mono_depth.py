@@ -51,6 +51,19 @@ _MAX_DEPTH = {'hypersim': 20.0, 'vkitti': 80.0}
 _model_cache = {}
 
 
+def unload_metric_depth_models():
+    """Free all cached depth models and their CUDA memory.
+
+    The anchor pipeline only needs the depth model for a single inference,
+    but SAM2/InstantMesh's own diffusion+mesh-extraction stages that run
+    afterward are themselves VRAM-heavy, so call this right after
+    estimate_metric_depth() to release the depth model before those stages.
+    """
+    _model_cache.clear()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
 def load_metric_depth_model(ckpt_path, encoder='vitl', dataset='hypersim', device='cuda'):
     """Load (and cache) a Depth Anything V2 *metric* checkpoint."""
     key = (ckpt_path, encoder, dataset, device)
