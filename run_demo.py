@@ -25,6 +25,10 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Set experiment name and paths")
     parser.add_argument("--ycb_model_path", type=str, default="/home/miruware/ssd_4tb/dataset/ho3d/YCB_Video_Models", help="Path to the YCB Video Models")
     parser.add_argument("--img_to_3d", action="store_true",help="Running with InstantMesh+SAM2")
+    parser.add_argument("--mono_depth", action="store_true", help="Estimate metric depth from the RGB image instead of reading demo_data/depth.png. Combine with --img_to_3d for a fully RGB-only pipeline (no depth sensor required).")
+    parser.add_argument("--mono_depth_ckpt", type=str, default="depth_anything_v2/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth", help="Path to a Depth Anything V2 metric checkpoint (see README 'Monocular (RGB-only) mode')")
+    parser.add_argument("--mono_depth_encoder", type=str, default="vitl", choices=["vits", "vitb", "vitl"], help="Depth Anything V2 backbone matching --mono_depth_ckpt")
+    parser.add_argument("--mono_depth_dataset", type=str, default="hypersim", choices=["hypersim", "vkitti"], help="Metric checkpoint family: hypersim=indoor, vkitti=outdoor")
     args = parser.parse_args()
 
 
@@ -40,9 +44,14 @@ if __name__=='__main__':
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    depth_scale = 1000.0
     color = cv2.cvtColor(cv2.imread(os.path.join(demo_path, 'color.png')), cv2.COLOR_BGR2RGB)
-    depth = cv2.imread(os.path.join(demo_path, 'depth.png'), cv2.IMREAD_ANYDEPTH).astype(np.float32) / depth_scale
+    if args.mono_depth:
+        from mono_depth import estimate_metric_depth
+        print(f"Estimating metric depth from RGB only (encoder={args.mono_depth_encoder}, dataset={args.mono_depth_dataset})...")
+        depth = estimate_metric_depth(color, ckpt_path=args.mono_depth_ckpt, encoder=args.mono_depth_encoder, dataset=args.mono_depth_dataset)
+    else:
+        depth_scale = 1000.0
+        depth = cv2.imread(os.path.join(demo_path, 'depth.png'), cv2.IMREAD_ANYDEPTH).astype(np.float32) / depth_scale
     Image.fromarray(color).save(os.path.join(save_path, 'color.png'))
 
     label = np.load(os.path.join(demo_path, 'labels.npz'))
