@@ -92,11 +92,23 @@ if __name__=='__main__':
 
         pred_pose = est.register_any6d(K=intrinsic, rgb=color, depth=depth, ob_mask=mask, iteration=5, name=f'demo')
 
+        # Save the anchor pose/mesh first - run_ho3d_query.py only needs these,
+        # so a missing GT mesh below shouldn't cost us the whole object.
+        np.savetxt(os.path.join(save_path, f'{obj}_initial_pose.txt'), pred_pose)
+        est.mesh.export(os.path.join(save_path, f'final_mesh_{obj}.obj'))
+
+        gt_mesh_path = f'{ycb_model_path}/models/{obj}/textured_simple.obj'
+        if not os.path.exists(gt_mesh_path):
+            print(f'[skip] GT mesh missing for {obj} ({gt_mesh_path}), anchor pose/mesh saved to {save_path}')
+            results.append({
+                'Object': obj,
+                'Object_Number': obj_num,
+                'Chamfer_Distance': None
+                })
+            continue
 
         gt_pose = np.loadtxt(os.path.join(save_path, f'{obj}_gt_pose.txt'))
-
-
-        gt_mesh = trimesh.load(f'{ycb_model_path}/models/{obj}/textured_simple.obj')
+        gt_mesh = trimesh.load(gt_mesh_path)
 
         visualize_frame_results(color=color, gt_mesh=gt_mesh, est=est, K=intrinsic, gt_pose=gt_pose, pred_pose=pred_pose,
                                 metric=None, obj_f=obj, frame_idx=0, save_path=save_path, glctx=glctx,
@@ -104,9 +116,6 @@ if __name__=='__main__':
 
         chamfer_dis = calculate_chamfer_distance_gt_mesh(gt_pose, gt_mesh, pred_pose, est.mesh)
         print(chamfer_dis)
-
-        np.savetxt(os.path.join(save_path, f'{obj}_initial_pose.txt'), pred_pose)
-        est.mesh.export(os.path.join(save_path, f'final_mesh_{obj}.obj'))
 
         np.savetxt(os.path.join(save_path, f'{obj}_cd.txt'), [chamfer_dis])
 
