@@ -7,8 +7,10 @@ cmake .. && \
 make -j$(nproc)
 
 # Install mycuda
+# --no-build-isolation: this extension compiles against libtorch, so pip must
+# use the current env's already-installed torch instead of an isolated build env.
 cd ${PROJ_ROOT}/bundlesdf/mycuda && \
 rm -rf build *egg* *.so && \
-python -m pip install -e .
+python -m pip install --no-build-isolation -e .
 
 cd ${PROJ_ROOT}
