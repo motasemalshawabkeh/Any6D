@@ -83,7 +83,7 @@ open3d==0.18.0
 
 pytorch-lightning==2.1.2
 gradio==3.41.2
-huggingface-hub>=0.16.4
+huggingface-hub>=0.16.4,<0.26  # diffusers==0.20.2 (below) needs the cached_download() helper, removed in 0.26
 einops
 omegaconf
 torchmetrics
