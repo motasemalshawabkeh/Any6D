@@ -48,12 +48,16 @@ pip install --extra-index-url https://miropsota.github.io/torch_packages_builder
 CMAKE_PREFIX_PATH=$CONDA_PREFIX/lib/python3.9/site-packages/pybind11/share/cmake/pybind11 bash foundationpose/build_all_conda.sh
 
 # build SAM2
-cd sam2 && pip install -e . && cd checkpoints && \
-./download_ckpts.sh && \
-cd ..
+cd sam2 && pip install -e . && cd ..
 
-# build InstantMesh 
-cd instantmesh && pip install -e . && cd ..
+# download SAM2 checkpoint (this vendored copy has no checkpoints/download_ckpts.sh)
+mkdir -p sam2/checkpoints
+wget -P sam2/checkpoints https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt
+
+# InstantMesh: no install step - this vendored copy has no setup.py/pyproject.toml.
+# Its deps are already covered by the root requirements.txt; just make sure the
+# instantmesh/ folder stays next to the run_*.py scripts so Python can import it.
+
 # build bop_toolkit
 cd bop_toolkit && python setup.py install && cd .. 
 ```
