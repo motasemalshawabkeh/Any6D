@@ -2,6 +2,7 @@ import os
 import trimesh
 import numpy as np
 import cv2
+import torch
 
 import nvdiffrast.torch as dr
 import argparse
@@ -38,6 +39,14 @@ if __name__=='__main__':
     glctx = dr.RasterizeCudaContext()
 
     for obj in tqdm(obj_list, desc='Object'):
+
+        # Any6D's refiner (predict_pose_refine.py) sets the GLOBAL default
+        # tensor type to CUDA and never restores it. Left that way, the next
+        # object's --img_to_3d diffusion pipeline builds tensors implicitly on
+        # CUDA where it expects CPU ones (e.g. EulerAncestralDiscreteScheduler's
+        # np.array(...) conversion), crashing with "can't convert cuda:0
+        # device type tensor to numpy". Reset before each object runs.
+        torch.set_default_tensor_type('torch.FloatTensor')
 
         if obj == '006_mustard_bottle':
             obj_num = 5
