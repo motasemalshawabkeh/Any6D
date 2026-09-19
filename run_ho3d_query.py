@@ -282,7 +282,7 @@ if __name__ == '__main__':
         }
     data.append(mean_row)
 
-    latex_str = f"MEAN & {means_all['AR']:.1f} & {means_all['VSD']:.1f} & {means_all['MSSD']:.1f} & {means_all['MSPD']:.1f} & {means_all['ADD-S']:.1f} & - \\\\"
+    latex_str = f"MEAN & {overall_means['AR']:.1f} & {overall_means['VSD']:.1f} & {overall_means['MSSD']:.1f} & {overall_means['MSPD']:.1f} & {overall_means['ADD-S']:.1f} & - \\\\"
     print("\n" + latex_str)
 
     df = pd.DataFrame(data)
