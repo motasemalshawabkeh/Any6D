@@ -17,9 +17,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Set experiment name and paths")
 
     parser.add_argument("--name", type=str, default="any6d", help="Experiment name")
-    parser.add_argument("--anchor_path", type=str, default="/home/miruware/ssd_4tb/cvpr_2025_results/anchor_results/dexycb_reference_view_ours", help="Path to the YCB-V model info JSON")
-    parser.add_argument("--hot3d_data_root", type=str, default="/home/miruware/ssd_4tb/dataset/ho3d", help="Path to the HO3D dataset root")
-    parser.add_argument("--ycb_model_path", type=str, default="/home/miruware/ssd_4tb/dataset/ho3d/YCB_Video_Models", help="Path to the YCB Video Models")
+    parser.add_argument("--anchor_path", type=str, required=True, help="Path to the YCB-V model info JSON")
+    parser.add_argument("--hot3d_data_root", type=str, required=True, help="Path to the HO3D dataset root")
+    parser.add_argument("--ycb_model_path", type=str, required=True, help="Path to the YCB Video Models")
     parser.add_argument("--ycbv_modesl_info_path", type=str, default="./models_info.json", help="Path to the YCB-V model info JSON")
     parser.add_argument("--running_stride", type=int, default=10, help="Running stride")
 

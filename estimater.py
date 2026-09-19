@@ -17,8 +17,8 @@ from foundationpose.learning.training.predict_score import *
 from foundationpose.learning.training.predict_pose_refine import *
 
 class Any6D:
-    def __init__(self, symmetry_tfs=None, mesh=None, scorer: ScorePredictor = ScorePredictor(),
-                 refiner: PoseRefinePredictor = PoseRefinePredictor(), glctx=dr.RasterizeCudaContext(), debug=0,
+    def __init__(self, symmetry_tfs=None, mesh=None, scorer: ScorePredictor = None,
+                 refiner: PoseRefinePredictor = None, glctx=None, debug=0,
                  debug_dir='./debug/'):
         self.gt_pose = None
         self.ignore_normal_flip = True
@@ -35,7 +35,7 @@ class Any6D:
         self.reset_object(mesh=mesh, symmetry_tfs=symmetry_tfs)
         self.make_rotation_grid(min_n_views=40, inplane_step=60)
 
-        self.glctx = glctx
+        self.glctx = glctx if glctx is not None else dr.RasterizeCudaContext()
 
         if scorer is not None:
             self.scorer = scorer

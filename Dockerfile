@@ -8,19 +8,27 @@ ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 
 RUN apt-get update && \
-    apt-get install -y libgtk2.0-dev && \
-    apt-get install -y build-essential git wget vim libegl1-mesa-dev libglib2.0-0 unzip cmake g++ gcc make build-essential libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev
+    apt-get install -y --no-install-recommends \
+        libgtk2.0-dev build-essential git wget vim libegl1-mesa-dev libglib2.0-0 \
+        unzip cmake g++ gcc make libboost-system-dev libboost-thread-dev \
+        libboost-program-options-dev libboost-test-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN cd / && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /miniconda.sh && \
     /bin/bash /miniconda.sh -b -p /opt/conda &&\
+    rm /miniconda.sh &&\
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh &&\
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc &&\
-    /bin/bash -c "source ~/.bashrc" && \
     /opt/conda/bin/conda update -n base -c defaults conda -y &&\
     /opt/conda/bin/conda create -n Any6D python=3.9
 
 ENV PATH $PATH:/opt/conda/envs/Any6D/bin
-COPY . .
+
+WORKDIR /app
+
+# Install Python dependencies from requirements.txt alone first, so this
+# expensive layer stays cached across later, unrelated source-code changes.
+COPY requirements.txt .
 
 RUN conda init bash &&\
     echo "conda activate Any6D" >> ~/.bashrc &&\
@@ -34,6 +42,10 @@ RUN conda init bash &&\
 
 # this is needed to link where conda installs eigen3 vs where it is expected
 RUN ln -s /opt/conda/envs/Any6D/include/eigen3 /usr/local/include/eigen3
+
+# Bring in the rest of the source tree now; only the layers below (which
+# depend on the actual code) are invalidated when application code changes.
+COPY . .
 
 RUN conda init bash &&\
     conda activate Any6D &&\

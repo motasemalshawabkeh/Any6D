@@ -22,7 +22,6 @@ numba==0.59.1
 pybind11==2.12.0
 
 # CV Libraries
-imageio==2.34.0
 opencv-python==4.9.0.80
 opencv-contrib-python==4.9.0.80
 plotly==5.20.0
@@ -59,9 +58,7 @@ imgaug==0.4.0
 xlsxwriter==3.2.0
 timm==0.9.16
 albumentations==1.4.2
-xatlas==0.0.9
 nodejs==0.1.1
-jupyterlab==4.1.5
 objaverse==0.1.7
 g4f==0.2.7.1
 ultralytics==8.0.120
@@ -78,26 +75,18 @@ warp-lang==1.0.2
 # For PyTorch3D
 fvcore==0.1.5.post20221221
 
-open3d==0.18.0
-
-
 pytorch-lightning==2.1.2
 gradio==3.41.2
 huggingface-hub>=0.16.4
-einops
-omegaconf
 torchmetrics
-webdataset
 accelerate
 tensorboard
 PyMCubes
-trimesh
 rembg
 transformers==4.41.2
 diffusers==0.20.2
 bitsandbytes
-imageio[ffmpeg]
-xatlas
+imageio[ffmpeg]==2.34.0
 plyfile
 pandas
 XlsxWriter
