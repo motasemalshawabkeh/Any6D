@@ -122,6 +122,48 @@ python run_ho3d_query.py \
 ```
 
 
+# Free6D: a ShapeNet/ScanObjectNN "free" anchor
+
+Any6D still needs one *physically captured* RGB-D anchor image per novel
+object. **Free6D** (`free6d/`) removes that requirement: given just a
+category label and a masked observation (an RGB-D crop, or a real scan such
+as one from ScanObjectNN), it retrieves the closest-matching CAD model from
+**ShapeNet** and non-rigidly fits it (rigid+scale ICP, then a Laplacian-
+regularized Chamfer refinement) to produce an anchor mesh -- no learned
+image-to-3D generator, no captured reference scan, only free public CAD
+data. The resulting mesh plugs straight into the existing
+`Any6D.register_any6d()` pipeline, so pose refinement is unchanged.
+
+**Important scope note:** ScanObjectNN has no 6D pose ground truth -- it's a
+real-world point-cloud classification/robustness benchmark. We use it to
+validate that the ShapeNet-only shape prior still reconstructs real, noisy,
+partially-occluded scans (`eval_free6d_scanobjectnn.py`, reports Chamfer
+distance, not pose error). Free6D's supported categories (bag, cabinet,
+chair, display, table, bed, pillow, sofa -- the ShapeNet/ScanObjectNN
+overlap) are furniture-like and don't overlap with Any6D's existing
+HO3D/YCBV pose benchmarks (tabletop manipulation objects), so pose-accuracy
+numbers need a posed dataset in the same category domain -- **Scan2CAD**
+(real ScanNet scenes with GT 9-DoF ShapeNet CAD alignments) is the natural
+fit and is the planned next integration.
+
+### Setup
+- [Download ShapeNetCore.v2](scripts/download_shapenet.md) (license-gated, free)
+- [Download ScanObjectNN](scripts/download_scanobjectnn.md) (access-gated, free)
+
+### Usage
+```bash
+# Build a Free6D anchor mesh from your own RGB-D capture and run Any6D pose estimation
+python run_free6d_demo.py --shapenet_root /path/to/ShapeNetCore.v2 --category chair \
+  --rgb my_scene/color.png --depth my_scene/depth.png --mask my_scene/mask.png \
+  --intrinsics my_scene/K.yml
+
+# Evaluate shape-prior robustness on real ScanObjectNN scans (no pose GT)
+python eval_free6d_scanobjectnn.py --shapenet_root /path/to/ShapeNetCore.v2 \
+  --scanobjectnn_h5 /path/to/h5_files/main_split_nobg/test_objectdataset.h5 \
+                     /path/to/h5_files/main_split/test_objectdataset.h5 \
+                     /path/to/h5_files/main_split/test_objectdataset_augmentedrot_scale75.h5
+```
+
 # Acknowledgement
 We would like to acknowledge the contributions of public projects [FoundationPose](https://github.com/NVlabs/FoundationPose), [InstantMesh](https://github.com/TencentARC/InstantMesh), [SAM2](https://github.com/facebookresearch/sam2), [Oryon](https://github.com/jcorsetti/oryon) and [bop_toolkit](https://github.com/thodan/bop_toolkit) for their code release. We also thank the CVPR reviewers and Area Chair for their appreciation of this work and their constructive feedback.
 
