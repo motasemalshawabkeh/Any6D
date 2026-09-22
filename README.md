@@ -142,13 +142,21 @@ distance, not pose error). Free6D's supported categories (bag, cabinet,
 chair, display, table, bed, pillow, sofa -- the ShapeNet/ScanObjectNN
 overlap) are furniture-like and don't overlap with Any6D's existing
 HO3D/YCBV pose benchmarks (tabletop manipulation objects), so pose-accuracy
-numbers need a posed dataset in the same category domain -- **Scan2CAD**
-(real ScanNet scenes with GT 9-DoF ShapeNet CAD alignments) is the natural
-fit and is the planned next integration.
+numbers need a posed dataset in the same category domain. **Scan2CAD** (real
+ScanNet scenes with GT 9-DoF ShapeNet CAD alignments) closes that gap:
+`eval_free6d_scan2cad.py` renders each GT alignment's silhouette to get an
+object mask (standing in for a real detector), builds a Free6D anchor from
+*only* the category label + that masked observation (never the GT CAD id or
+pose), runs it through the same `Any6D.register_any6d()`, and scores with
+the same `calculate_chamfer_distance_gt_mesh()` Any6D's own HO3D scripts
+use -- so the numbers are directly comparable to Any6D's InstantMesh path.
+Scan2CAD's category set overlaps ShapeNet/ScanObjectNN on cabinet, chair,
+display, table, sofa (its `catid_cad` is literally a ShapeNet synset id).
 
 ### Setup
 - [Download ShapeNetCore.v2](scripts/download_shapenet.md) (license-gated, free)
-- [Download ScanObjectNN](scripts/download_scanobjectnn.md) (access-gated, free)
+- [Download ScanObjectNN](scripts/download_scanobjectnn.md) (access-gated, free) -- shape-prior robustness
+- [Download Scan2CAD + ScanNet](scripts/download_scan2cad.md) (access-gated, free) -- pose accuracy
 
 ### Usage
 ```bash
@@ -162,6 +170,10 @@ python eval_free6d_scanobjectnn.py --shapenet_root /path/to/ShapeNetCore.v2 \
   --scanobjectnn_h5 /path/to/h5_files/main_split_nobg/test_objectdataset.h5 \
                      /path/to/h5_files/main_split/test_objectdataset.h5 \
                      /path/to/h5_files/main_split/test_objectdataset_augmentedrot_scale75.h5
+
+# Evaluate pose accuracy on Scan2CAD (real ScanNet scenes, GT CAD alignments)
+python eval_free6d_scan2cad.py --shapenet_root /path/to/ShapeNetCore.v2 \
+  --scan2cad_json /path/to/full_annotations.json --scannet_root /path/to/scannet_frames
 ```
 
 # Acknowledgement
