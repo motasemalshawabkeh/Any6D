@@ -11,11 +11,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+import h5py
 import numpy as np
 import trimesh
 
-from free6d.datasets.scan2cad import load_scan2cad_annotations, compose_mat4
+from free6d.datasets.scan2cad import load_scan2cad_annotations
 from free6d.datasets.scannet_frames import ScanNetScene, is_valid_pose
+from free6d.datasets.scanobjectnn import CLASS_NAMES, ScanObjectNN
 from free6d.render import render_mask
 
 
@@ -125,10 +127,37 @@ def test_scannet_frames() -> None:
         shutil.rmtree(tmp_root, ignore_errors=True)
 
 
+def test_scanobjectnn() -> None:
+    tmp = tempfile.mktemp(suffix=".h5")
+    rng = np.random.default_rng(0)
+    n = 20
+    data = rng.normal(size=(n, 2048, 3)).astype(np.float32)
+    labels = rng.integers(0, len(CLASS_NAMES), size=n).astype(np.int64)
+    try:
+        with h5py.File(tmp, "w") as f:
+            f.create_dataset("data", data=data)
+            f.create_dataset("label", data=labels)
+
+        dataset = ScanObjectNN(tmp)
+        assert len(dataset) == n
+        sample = dataset[0]
+        assert sample.points.shape == (2048, 3)
+        assert sample.category == CLASS_NAMES[labels[0]]
+        for category in dataset.categories_present():
+            matches = dataset.filter_category(category)
+            assert all(s.category == category for s in matches)
+            assert len(matches) == int((labels == CLASS_NAMES.index(category)).sum())
+        print(f"[scanobjectnn] PASS ({len(dataset)} samples, "
+              f"{len(dataset.categories_present())} categories present)")
+    finally:
+        os.remove(tmp)
+
+
 def main() -> int:
     test_render_mask()
     test_scan2cad_parsing()
     test_scannet_frames()
+    test_scanobjectnn()
     print("[smoke] ALL PASS")
     return 0
 

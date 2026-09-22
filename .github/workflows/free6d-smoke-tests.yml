@@ -1,0 +1,53 @@
+name: Free6D smoke tests
+
+# These tests deliberately avoid CUDA/nvdiffrast/Any6D's full conda env (a
+# GPU isn't available on standard GitHub-hosted runners), so they can run
+# here on every push/PR: synthetic-data checks of the ShapeNet retrieval +
+# rigid/scale ICP + non-rigid fit pipeline, the Scan2CAD/ScanNet loaders,
+# the pyrender mask projection, and the ScanObjectNN loader. See
+# test_free6d_smoke.py / test_free6d_eval_smoke.py for what each covers,
+# and the README's Free6D section for what still needs a real GPU + a
+# license-gated dataset download and so isn't covered here.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "free6d/**"
+      - "test_free6d_*.py"
+      - ".github/workflows/free6d-smoke-tests.yml"
+  pull_request:
+    paths:
+      - "free6d/**"
+      - "test_free6d_*.py"
+      - ".github/workflows/free6d-smoke-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system libraries (offscreen GL for pyrender, USB for Open3D)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libegl-mesa0 libgl1 libusb-1.0-0
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy trimesh open3d torch h5py \
+                      opencv-python-headless pyrender PyOpenGL PyOpenGL_accelerate
+
+      - name: Run shape-prior pipeline smoke test
+        run: python test_free6d_smoke.py
+
+      - name: Run Scan2CAD/ScanNet/ScanObjectNN/render smoke tests
+        env:
+          PYOPENGL_PLATFORM: egl
+        run: python test_free6d_eval_smoke.py
